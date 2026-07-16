@@ -1,0 +1,46 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: redbanck-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/redbanck}
+    username: ${DB_USER:redbanck}
+    password: ${DB_PASSWORD:redbanck}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+app:
+  security:
+    # HS256 — mínimo 32 bytes. Sobrescribir en producción vía variable de entorno.
+    jwt-secret: ${JWT_SECRET:cambia-este-secreto-en-produccion-redbanck-2026!}
+    access-token-minutes: ${ACCESS_TOKEN_MINUTES:15}
+    refresh-token-days: ${REFRESH_TOKEN_DAYS:7}
+    max-failed-attempts: 5
+    lock-minutes: 15
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:3001,http://localhost:5173,http://localhost:4173}
+  seed:
+    admin-document: ${ADMIN_DOCUMENT:00000000}
+    admin-email: ${ADMIN_EMAIL:admin@redbanck.com}
+    admin-password: ${ADMIN_PASSWORD:Admin123!}
+
+springdoc:
+  swagger-ui:
+    path: /docs
+  api-docs:
+    path: /v3/api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: redbanck-db
+    environment:
+      POSTGRES_DB: redbanck
+      POSTGRES_USER: redbanck
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-redbanck}
+    ports:
+      # 5433 en el host: el 5432 lo ocupa el PostgreSQL instalado en WSL Ubuntu
+      - "5433:5432"
+    volumes:
+      - redbanck-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U redbanck -d redbanck"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ../../backend
+    container_name: redbanck-api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/redbanck
+      DB_USER: redbanck
+      DB_PASSWORD: ${DB_PASSWORD:-redbanck}
+      JWT_SECRET: ${JWT_SECRET:-cambia-este-secreto-en-produccion-redbanck-2026!}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin123!}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3001,http://localhost:5173,http://localhost:4173}
+    ports:
+      - "8080:8080"
+
+volumes:
+  redbanck-data:

@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply antialiased transition-colors duration-1000 ease-in-out;
+  }
+}
+
+@layer utilities {
+  /* Panel glass: sin degradados, solo color sólido transparente + blur + borde */
+  .glass-panel {
+    @apply backdrop-blur-xl border border-white/20 shadow-xl;
+  }
+  
+  .glass-panel-light {
+    @apply bg-white/40 border-white/40;
+  }
+  
+  .glass-panel-dark {
+    @apply bg-redbanck-main/40 border-white/10;
+  }
+}
