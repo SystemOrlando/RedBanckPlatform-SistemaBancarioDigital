@@ -1,13 +1,48 @@
+import { useState } from 'react';
 import { motion, useScroll, useTransform, type Variants } from 'framer-motion';
 import { useTheme } from '../hooks/useTheme';
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { ShieldCheck, Smartphone, Globe, ArrowRight, Zap, CheckCircle2, Megaphone, Phone, MapPin, MonitorSmartphone, ShieldAlert, Search, Percent, Gift, Landmark, CreditCard, Banknote, Home, TrendingUp } from 'lucide-react';
 
+// Indice del buscador: cada entrada apunta a una seccion de la landing
+const SEARCH_INDEX = [
+  { title: 'Cuentas', category: 'Producto', sectionId: 'productos' },
+  { title: 'Tarjetas', category: 'Producto', sectionId: 'productos' },
+  { title: 'Préstamos', category: 'Producto', sectionId: 'productos' },
+  { title: 'Hipotecas', category: 'Producto', sectionId: 'productos' },
+  { title: 'Seguros', category: 'Producto', sectionId: 'productos' },
+  { title: 'Inversiones', category: 'Producto', sectionId: 'productos' },
+  { title: 'Gana 10% Cashback', category: 'Campaña', sectionId: 'campanas' },
+  { title: 'Préstamo Vehicular 0%', category: 'Campaña', sectionId: 'campanas' },
+  { title: 'Adelanto de Sueldo', category: 'Campaña', sectionId: 'campanas' },
+  { title: 'Seguro Vida Cero', category: 'Campaña', sectionId: 'campanas' },
+  { title: 'Cine 2x1', category: 'Beneficio', sectionId: 'beneficios' },
+  { title: '20% en Restaurantes', category: 'Beneficio', sectionId: 'beneficios' },
+  { title: 'Puntos RedBanck', category: 'Beneficio', sectionId: 'beneficios' },
+  { title: 'Membresía Gratis', category: 'Beneficio', sectionId: 'beneficios' },
+  { title: 'Agencias y Contacto', category: 'Ayuda', sectionId: 'contacto' },
+  { title: 'Línea 1820 Seguridad', category: 'Ayuda', sectionId: 'contacto' },
+];
+
+const scrollToSection = (id: string) => {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
 export default function LandingPage() {
   const { theme } = useTheme();
-  const isDark = theme === 'dark'; 
+  const isDark = theme === 'dark';
   const navigate = useNavigate();
+  const [query, setQuery] = useState('');
+
+  const results = query.trim().length >= 2
+    ? SEARCH_INDEX.filter(item => item.title.toLowerCase().includes(query.trim().toLowerCase()))
+    : [];
+
+  const goToResult = (sectionId: string) => {
+    setQuery('');
+    scrollToSection(sectionId);
+  };
 
   // Scroll animations for parallax effects
   const { scrollY } = useScroll();
@@ -54,26 +89,55 @@ export default function LandingPage() {
           
           {/* Quick Access Links Top */}
           <nav className={clsx("hidden lg:flex items-center gap-6 font-bold text-sm", isDark ? "text-white" : "text-black/80")}>
-            <a href="#" className="hover:text-redbanck-main transition-colors">Personas</a>
-            <a href="#" className="hover:text-redbanck-main transition-colors">Empresas</a>
-            <a href="#" className="hover:opacity-100 hover:text-redbanck-main transition-colors">Tarjetas</a>
-            <a href="#" className="hover:opacity-100 hover:text-redbanck-main transition-colors">Préstamos</a>
-            <a href="#" className="hover:opacity-100 hover:text-redbanck-main transition-colors">Beneficios</a>
+            <button onClick={() => scrollToSection('productos')} className="hover:text-redbanck-main transition-colors">Personas</button>
+            <button onClick={() => scrollToSection('campanas')} className="hover:text-redbanck-main transition-colors">Empresas</button>
+            <button onClick={() => scrollToSection('productos')} className="hover:opacity-100 hover:text-redbanck-main transition-colors">Tarjetas</button>
+            <button onClick={() => scrollToSection('campanas')} className="hover:opacity-100 hover:text-redbanck-main transition-colors">Préstamos</button>
+            <button onClick={() => scrollToSection('beneficios')} className="hover:opacity-100 hover:text-redbanck-main transition-colors">Beneficios</button>
           </nav>
         </div>
         
         <div className="flex gap-3 md:gap-5 items-center">
           {/* Buscador de Productos */}
-          <div className={clsx(
-            "hidden lg:flex items-center gap-2 px-4 py-2 rounded-full border transition-all focus-within:w-[32rem] w-80",
-            isDark ? "bg-white/5 border-white/10 focus-within:border-white text-white" : "bg-black/5 border-transparent focus-within:border-redbanck-main/30 focus-within:bg-white text-black"
-          )}>
-            <Search size={18} className="opacity-50" />
-            <input 
-              type="text" 
-              placeholder="Buscar productos..." 
-              className="bg-transparent outline-none w-full text-sm font-medium placeholder:opacity-50"
-            />
+          <div className="hidden lg:block relative">
+            <div className={clsx(
+              "flex items-center gap-2 px-4 py-2 rounded-full border transition-all focus-within:w-[32rem] w-80",
+              isDark ? "bg-white/5 border-white/10 focus-within:border-white text-white" : "bg-black/5 border-transparent focus-within:border-redbanck-main/30 focus-within:bg-white text-black"
+            )}>
+              <Search size={18} className="opacity-50" />
+              <input
+                type="text"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Buscar productos..."
+                className="bg-transparent outline-none w-full text-sm font-medium placeholder:opacity-50"
+              />
+            </div>
+
+            {/* Resultados */}
+            {query.trim().length >= 2 && (
+              <div className={clsx(
+                "absolute top-full mt-2 left-0 right-0 rounded-2xl shadow-2xl overflow-hidden z-50 border",
+                isDark ? "bg-[#111111] border-white/10 text-white" : "bg-white border-black/5 text-black"
+              )}>
+                {results.length === 0 && (
+                  <p className="px-5 py-4 text-sm opacity-60">Sin resultados para "{query}"</p>
+                )}
+                {results.map(item => (
+                  <button
+                    key={item.title}
+                    onClick={() => goToResult(item.sectionId)}
+                    className={clsx(
+                      "w-full text-left px-5 py-3 flex items-center justify-between transition-colors",
+                      isDark ? "hover:bg-white/5" : "hover:bg-black/5"
+                    )}
+                  >
+                    <span className="font-semibold text-sm">{item.title}</span>
+                    <span className="text-xs opacity-50 font-bold uppercase tracking-wide">{item.category}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <button 
@@ -187,7 +251,7 @@ export default function LandingPage() {
         </div>
 
         {/* ¿Qué producto deseas hoy? (Slider) */}
-        <div className="mt-40 w-full text-center overflow-hidden">
+        <div id="productos" className="mt-40 w-full text-center overflow-hidden scroll-mt-28">
           <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-16">¿Qué producto deseas hoy?</h2>
           <div className="w-full overflow-hidden flex pb-12 pt-4 relative group/slider">
             {/* Fade effect edges */}
@@ -204,8 +268,9 @@ export default function LandingPage() {
                 { icon: ShieldCheck, title: "Seguros" },
                 { icon: TrendingUp, title: "Inversiones" },
               ].map((prod, i) => (
-                <motion.button 
+                <motion.button
                   key={`a-${i}`}
+                  onClick={() => navigate('/register')}
                   whileHover={{ y: -5, scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className={clsx(
@@ -238,8 +303,9 @@ export default function LandingPage() {
                 { icon: ShieldCheck, title: "Seguros" },
                 { icon: TrendingUp, title: "Inversiones" },
               ].map((prod, i) => (
-                <motion.button 
+                <motion.button
                   key={`b-${i}`}
+                  onClick={() => navigate('/register')}
                   whileHover={{ y: -5, scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className={clsx(
@@ -298,7 +364,7 @@ export default function LandingPage() {
       </main>
 
       {/* Seccion para Campañas */}
-      <section className={clsx("w-full py-12 mt-20", isDark ? "bg-black text-white" : "bg-redbanck-main text-white shadow-inner")}>
+      <section id="campanas" className={clsx("w-full py-12 mt-20 scroll-mt-24", isDark ? "bg-black text-white" : "bg-redbanck-main text-white shadow-inner")}>
         <div className="max-w-7xl mx-auto w-full text-left">
           <div className="flex items-center gap-3 mb-8 px-4">
             <Percent size={32} className="text-yellow-400" />
@@ -333,7 +399,7 @@ export default function LandingPage() {
       </section>
 
       {/* Seccion para Beneficios */}
-      <section className={clsx("w-full py-12 mt-16", isDark ? "bg-black text-white" : "bg-redbanck-main text-white shadow-inner")}>
+      <section id="beneficios" className={clsx("w-full py-12 mt-16 scroll-mt-24", isDark ? "bg-black text-white" : "bg-redbanck-main text-white shadow-inner")}>
         <div className="max-w-7xl mx-auto w-full text-left">
           <div className="flex items-center gap-3 mb-8 px-4">
             <Gift size={32} className="text-yellow-400" />
@@ -367,8 +433,8 @@ export default function LandingPage() {
         </div>
       </section>
       {/* Footer / Canales Digitales & Contacto */}
-      <footer className={clsx(
-        "py-16 text-center border-t",
+      <footer id="contacto" className={clsx(
+        "py-16 text-center border-t scroll-mt-24",
         isDark ? "bg-black border-white/10" : "bg-white border-black/5"
       )}>
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 px-8">
