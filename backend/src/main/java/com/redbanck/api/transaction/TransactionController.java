@@ -3,9 +3,12 @@ package com.redbanck.api.transaction;
 import com.redbanck.api.user.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +17,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.UUID;
 
 @RestController
@@ -70,8 +74,19 @@ public class TransactionController {
         Instant toInstant = to == null ? null : to.plusDays(1).atStartOfDay(ZONE).toInstant();
         int pageSize = Math.min(Math.max(size, 1), 100);
 
-        return transactionRepository
-                .search(user, accountId, type, fromInstant, toInstant, PageRequest.of(page, pageSize))
-                .map(TransactionDto::from);
+        // Filtros opcionales con Specification: evita parametros null en el SQL,
+        // que PostgreSQL no puede tipar con el patron (:param is null or ...)
+        Specification<Transaction> spec = (root, query, cb) -> {
+            var predicates = new ArrayList<Predicate>();
+            predicates.add(cb.equal(root.get("account").get("user"), user));
+            if (accountId != null) predicates.add(cb.equal(root.get("account").get("id"), accountId));
+            if (type != null) predicates.add(cb.equal(root.get("type"), type));
+            if (fromInstant != null) predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromInstant));
+            if (toInstant != null) predicates.add(cb.lessThan(root.get("createdAt"), toInstant));
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        var pageable = PageRequest.of(page, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return transactionRepository.findAll(spec, pageable).map(TransactionDto::from);
     }
 }
