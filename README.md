@@ -22,6 +22,15 @@ Neobanco full-stack: registro y autenticación segura, cuentas bancarias, transf
 - Transferencias atómicas con bloqueo pesimista y validación de límites (por operación / diario / mensual)
 - Control de acceso por roles (`USER` / `ADMIN`)
 
+## Frontend conectado a la API real
+
+El dashboard, cuentas, transferencias, historial, tarjetas, límites y el panel
+admin consumen la API en vivo (nada de datos simulados): saldos, gráfica de
+evolución, ingresos/gastos del mes y movimientos recientes se calculan a
+partir de las transacciones reales del usuario. La landing pública tiene
+navegación con scroll a sus secciones y un buscador con resultados en vivo
+sobre productos, campañas y beneficios.
+
 ## Ejecución rápida
 
 ```bash
